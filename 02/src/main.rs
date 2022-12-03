@@ -60,6 +60,17 @@ impl TryFrom<&str> for Play {
     }
 }
 
+impl Play {
+    // Rock defeats Scissors, Scissors defeats Paper, and Paper defeats Rock.
+    fn win_over(self, b: Play) -> bool {
+        return match self {
+            Play::Rock => b == Play::Scissors,
+            Play::Scissors => b == Play::Paper,
+            Play::Paper => b == Play::Rock,
+        };
+    }
+}
+
 // The score for a single round is the score for the shape you selected (1 for Rock, 2 for Paper,
 // and 3 for Scissors) plus the score for the outcome of the round (0 if you lost, 3 if the round
 // was a draw, and 6 if you won).
@@ -70,11 +81,7 @@ fn calculate_score(a: Play, b: Play) -> i32 {
         // drawn
         return 3 + av;
     }
-    // Rock defeats Scissors, Scissors defeats Paper, and Paper defeats Rock.
-    if a == Play::Rock && b == Play::Scissors
-        || a == Play::Scissors && b == Play::Paper
-        || a == Play::Paper && b == Play::Rock
-    {
+    if a.win_over(b) {
         // i won
         return 6 + av;
     }
