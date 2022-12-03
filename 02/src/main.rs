@@ -91,21 +91,17 @@ fn calculate_score(a: Play, b: Play) -> i32 {
 
 fn find_play(a: Play, m: Move) -> Play {
     // this could prob be better
-    return match a {
-        Play::Rock => match m {
-            Move::Win => Play::Paper,
-            Move::Lose => Play::Scissors,
-            Move::Draw => a,
+    return match m {
+        Move::Draw => a,
+        Move::Win => match a {
+            Play::Rock => Play::Paper,
+            Play::Paper => Play::Scissors,
+            Play::Scissors => Play::Rock,
         },
-        Play::Paper => match m {
-            Move::Win => Play::Scissors,
-            Move::Lose => Play::Rock,
-            Move::Draw => a,
-        },
-        Play::Scissors => match m {
-            Move::Win => Play::Rock,
-            Move::Lose => Play::Paper,
-            Move::Draw => a,
+        Move::Lose => match a {
+            Play::Rock => Play::Scissors,
+            Play::Paper => Play::Rock,
+            Play::Scissors => Play::Paper,
         },
     };
 }
