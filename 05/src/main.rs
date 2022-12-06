@@ -4,11 +4,11 @@ fn main() {
     let mut f = File::open("input.txt").unwrap();
     let mut buf = String::new();
     f.read_to_string(&mut buf).expect("works");
-    println!("result 1: {}", part1(buf.to_owned()));
-    println!("result 2: {}", part2(buf.to_owned()));
+    println!("result 1: {}", part1(&buf));
+    println!("result 2: {}", part2(&buf));
 }
 
-fn part1(buf: String) -> String {
+fn part1(buf: &String) -> String {
     let (crates, moves) = buf.split_once("\n\n").unwrap();
 
     let mut crane = Crane::from_str(crates).expect("no fail");
@@ -21,7 +21,7 @@ fn part1(buf: String) -> String {
     crane.top()
 }
 
-fn part2(buf: String) -> String {
+fn part2(buf: &String) -> String {
     let (crates, moves) = buf.split_once("\n\n").unwrap();
 
     let mut crane = Crane::from_str(crates).expect("no fail");
@@ -169,13 +169,13 @@ mod test {
 
     #[test]
     fn test_part1() {
-        let input = include_str!("../input1.txt");
-        assert_eq!(super::part1(input.to_string()), "CMZ");
+        let input = include_str!("../input1.txt").to_string();
+        assert_eq!(super::part1(&input), "CMZ");
     }
 
     #[test]
     fn test_part2() {
-        let input = include_str!("../input1.txt");
-        assert_eq!(super::part2(input.to_string()), "MCD");
+        let input = include_str!("../input1.txt").to_string();
+        assert_eq!(super::part2(&input), "MCD");
     }
 }
