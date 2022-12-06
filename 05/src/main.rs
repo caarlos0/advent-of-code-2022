@@ -4,7 +4,8 @@ fn main() {
     let mut f = File::open("input.txt").unwrap();
     let mut buf = String::new();
     f.read_to_string(&mut buf).expect("works");
-    println!("result: {}", part1(buf));
+    println!("result 1: {}", part1(buf.to_owned()));
+    println!("result 2: {}", part2(buf.to_owned()));
 }
 
 fn part1(buf: String) -> String {
@@ -17,9 +18,19 @@ fn part1(buf: String) -> String {
         .collect();
 
     crane.apply(movements);
+    crane.top()
+}
 
-    println!("{:?}", crane.crates);
+fn part2(buf: String) -> String {
+    let (crates, moves) = buf.split_once("\n\n").unwrap();
 
+    let mut crane = Crane::from_str(crates).expect("no fail");
+    let movements: Vec<Move> = moves
+        .lines()
+        .map(|l| Move::from_str(l).expect("success"))
+        .collect();
+
+    crane.apply2(movements);
     crane.top()
 }
 
@@ -31,6 +42,7 @@ struct Move {
 }
 
 impl Move {
+    #![allow(dead_code)]
     fn new(count: usize, from: usize, to: usize) -> Self {
         Self { count, from, to }
     }
@@ -68,10 +80,20 @@ impl Crane {
             for _ in 0..m.count {
                 let item = self.crates[m.from - 1].pop().expect("thx bye");
                 self.crates[m.to - 1].push(item);
-                println!(
-                    "moving {:?} from {} to {}, result: {:?}",
-                    item, m.from, m.to, self.crates
-                );
+            }
+        }
+    }
+
+    fn apply2(&mut self, movements: Vec<Move>) {
+        for m in movements {
+            let mut items: Vec<char> = Vec::new();
+
+            for _ in 0..m.count {
+                items.push(self.crates[m.from - 1].pop().expect("thx bye"));
+            }
+
+            for item in items.iter().rev() {
+                self.crates[m.to - 1].push(item.to_owned());
             }
         }
     }
@@ -90,12 +112,10 @@ impl FromStr for Crane {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        println!("{}", s);
         let mut crates = Vec::new();
         for line in s.lines().rev().skip(1) {
             let mut i = 0;
             let mut ci = 0;
-            println!("{} {} {}", line, i, ci);
             while i < line.len() {
                 if crates.len() <= ci {
                     crates.push(Vec::new())
@@ -148,8 +168,14 @@ mod test {
     }
 
     #[test]
-    fn test() {
+    fn test_part1() {
         let input = include_str!("../input1.txt");
-        assert_eq!(super::part1(input.to_string()), "CMZ"); // "QNDWLMGNS");
+        assert_eq!(super::part1(input.to_string()), "CMZ");
+    }
+
+    #[test]
+    fn test_part2() {
+        let input = include_str!("../input1.txt");
+        assert_eq!(super::part2(input.to_string()), "MCD");
     }
 }
