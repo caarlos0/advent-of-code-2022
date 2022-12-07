@@ -9,34 +9,25 @@ fn main() {
 }
 
 fn part1(line: &String) -> usize {
-    let size = line.chars().count();
-    for i in 0..size - 3 {
-        let l = match line.get(i..i + 4) {
-            Some(expr) => expr,
-            None => break,
-        }
-        .chars()
-        .collect::<HashSet<char>>()
-        .len();
-        if l == 4 {
-            return i + 4;
-        }
-    }
-    0
+    find(line, 4)
 }
 
 fn part2(line: &String) -> usize {
+    find(line, 14)
+}
+
+fn find(line: &String, x: usize) -> usize {
     let size = line.chars().count();
-    for i in 0..size - 13 {
-        let l = match line.get(i..i + 14) {
+    for i in 0..size - x - 1 {
+        let l = match line.get(i..i + x) {
             Some(expr) => expr,
             None => break,
         }
         .chars()
         .collect::<HashSet<char>>()
         .len();
-        if l == 14 {
-            return i + 14;
+        if l == x {
+            return i + x;
         }
     }
     0
