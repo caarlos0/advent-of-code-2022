@@ -1,3 +1,13 @@
+// code based on the following post:
+//		https://fasterthanli.me/series/advent-of-code-2022/part-7
+//
+// my rust-fu was not good enough to figure this out on my own, kept fighting the borrow checker et
+// al and couldn't proceed... tried a multitude of things (all of which the author of the post
+// above outlines), so I think it's not like I was being too dumb, just not enough lang knowledge
+// yet.
+//
+// I still need to study all this better, and try the other solutions they propose... but first..
+// sleep!
 use std::{cell::RefCell, fmt, fs::File, io::Read, rc::Rc};
 
 use camino::Utf8PathBuf;
