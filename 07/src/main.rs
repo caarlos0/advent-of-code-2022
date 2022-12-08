@@ -1,4 +1,74 @@
-use std::{fs::File, io::Read, str::FromStr};
+use std::{fs::File, io::Read};
+
+use camino::Utf8PathBuf;
+use nom::{
+    branch::alt,
+    bytes::complete::{tag, take_while1},
+    combinator::{all_consuming, map},
+    sequence::{preceded, separated_pair},
+    Finish, IResult,
+};
+
+#[derive(Debug)]
+struct Ls;
+
+fn parse_ls(i: &str) -> IResult<&str, Ls> {
+    map(tag("ls"), |_| Ls)(i)
+}
+
+#[derive(Debug)]
+struct Cd(Utf8PathBuf);
+
+fn parse_cd(i: &str) -> IResult<&str, Cd> {
+    map(preceded(tag("cd "), parse_path), Cd)(i)
+}
+
+#[derive(Debug)]
+enum Command {
+    Ls(Ls),
+    Cd(Cd),
+}
+
+#[derive(Debug)]
+enum Entry {
+    Dir(Utf8PathBuf),
+    File(u64, Utf8PathBuf),
+}
+
+#[derive(Debug)]
+enum Line {
+    Command(Command),
+    Entry(Entry),
+}
+
+fn parse_line(i: &str) -> IResult<&str, Line> {
+    alt((
+        map(parse_command, Line::Command),
+        map(parse_entry, Line::Entry),
+    ))(i)
+}
+
+fn parse_entry(i: &str) -> IResult<&str, Entry> {
+    let parse_file = map(
+        separated_pair(nom::character::complete::u64, tag(" "), parse_path),
+        |(size, path)| Entry::File(size, path),
+    );
+    let parse_dir = map(preceded(tag("dir "), parse_path), Entry::Dir);
+
+    alt((parse_file, parse_dir))(i)
+}
+
+fn parse_command(i: &str) -> IResult<&str, Command> {
+    let (i, _) = tag("$ ")(i)?;
+    alt((map(parse_ls, Command::Ls), map(parse_cd, Command::Cd)))(i)
+}
+
+fn parse_path(i: &str) -> IResult<&str, Utf8PathBuf> {
+    map(
+        take_while1(|c: char| "abcdefghijklmnopqrstuvwxyz./".contains(c)),
+        Into::into,
+    )(i)
+}
 
 fn main() {
     let mut f = File::open("input.txt").unwrap();
@@ -8,90 +78,26 @@ fn main() {
     println!("result 2: {}", part2(&buf));
 }
 
-fn part1(_line: &String) -> usize {
-    unimplemented!()
+fn part1(input: &String) -> usize {
+    let lines = input
+        .lines()
+        .map(|l| all_consuming(parse_line)(l).finish().unwrap().1);
+
+    for line in lines {
+        println!("{line:?}");
+    }
+    0
 }
 
 fn part2(_line: &String) -> usize {
     unimplemented!()
 }
 
-#[derive(Debug)]
-struct Node {
-    name: String,
-    size: usize,
-    children: Vec<Node>,
-    node_type: NodeType,
-}
-
-impl Node {
-    fn new(name: String) -> Node {
-        return Node {
-            name,
-            size: 0,
-            children: Vec::new(),
-            node_type: NodeType::Dir,
-        };
-    }
-
-    fn new_file(name: String, size: usize) -> Node {
-        return Node {
-            name,
-            size,
-            children: Vec::new(),
-            node_type: NodeType::File,
-        };
-    }
-
-    fn add(&mut self, node: Node) {
-        self.children.push(node);
-    }
-}
-
-#[derive(Debug)]
-enum NodeType {
-    Dir,
-    File,
-}
-
-impl FromStr for Node {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut root = Node::new("/".to_string());
-        let mut current = &mut root;
-        for line in s.lines().skip(1) {
-            if line == "$ ls" {
-                continue;
-            }
-            if line.starts_with("$ cd ") {
-                let (_, dir) = line.split_at(5);
-                let mut node: Node = Node::new(dir.to_string());
-                current.add(node);
-                current = &mut node;
-                continue;
-            }
-            println!("{}", line);
-            let (type_or_size, name) = line.split_once(" ").expect("split in 2");
-            if type_or_size == "dir" {
-                current.add(Node::new(name.to_string()));
-                continue;
-            }
-            let size: usize = type_or_size.parse().expect("ok");
-            current.add(Node::new_file(name.to_string(), size));
-        }
-
-        Ok(root)
-    }
-}
-
 #[cfg(test)]
 mod test {
-    use std::str::FromStr;
-
     #[test]
     fn test_part1() {
-        let input = include_str!("../input1.txt");
-        assert_eq!(3, super::Node::from_str(input).expect("yep").children.len());
+        // let input = include_str!("../input1.txt");
+        // assert_eq!(10, from_str(input).len());
     }
 }
