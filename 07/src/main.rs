@@ -1,6 +1,7 @@
-use std::{fs::File, io::Read};
+use std::{cell::RefCell, fmt, fs::File, io::Read, rc::Rc};
 
 use camino::Utf8PathBuf;
+use indexmap::IndexMap;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
@@ -8,6 +9,24 @@ use nom::{
     sequence::{preceded, separated_pair},
     Finish, IResult,
 };
+
+type NodeHandle = Rc<RefCell<Node>>;
+
+#[derive(Default)]
+struct Node {
+    size: usize,
+    children: IndexMap<Utf8PathBuf, NodeHandle>,
+    parent: Option<NodeHandle>,
+}
+
+impl fmt::Debug for Node {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Node")
+            .field("size", &self.size)
+            .field("children", &self.children)
+            .finish()
+    }
+}
 
 #[derive(Debug)]
 struct Ls;
@@ -95,9 +114,44 @@ fn part1(input: &String) -> usize {
         .lines()
         .map(|l| all_consuming(parse_line)(l).finish().unwrap().1);
 
+    let root = Rc::new(RefCell::new(Node::default()));
+    let mut node = root.clone();
+
     for line in lines {
         println!("{line:?}");
+        match line {
+            Line::Command(cmd) => match cmd {
+                Command::Ls => {
+                    // just ignore those
+                }
+                Command::Cd(path) => match path.as_str() {
+                    "/" => {
+                        // ignore, we're already there
+                    }
+                    ".." => {
+                        let parent = node.borrow().parent.clone().unwrap();
+                        node = parent;
+                    }
+                    _ => {
+                        let child = node.borrow_mut().children.entry(path).or_default().clone();
+                        node = child;
+                    }
+                },
+            },
+            Line::Entry(entry) => match entry {
+                Entry::Dir(dir) => {
+                    let entry = node.borrow_mut().children.entry(dir).or_default().clone();
+                    entry.borrow_mut().parent = Some(node.clone());
+                }
+                Entry::File(size, file) => {
+                    let entry = node.borrow_mut().children.entry(file).or_default().clone();
+                    entry.borrow_mut().size = size as usize;
+                    entry.borrow_mut().parent = Some(node.clone());
+                }
+            },
+        }
     }
+    println!("{root:#?}");
     0
 }
 
