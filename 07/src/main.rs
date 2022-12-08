@@ -24,12 +24,6 @@ fn parse_cd(i: &str) -> IResult<&str, Cd> {
 }
 
 #[derive(Debug)]
-enum Command {
-    Ls(Ls),
-    Cd(Cd),
-}
-
-#[derive(Debug)]
 enum Entry {
     Dir(Utf8PathBuf),
     File(u64, Utf8PathBuf),
@@ -39,6 +33,24 @@ enum Entry {
 enum Line {
     Command(Command),
     Entry(Entry),
+}
+
+#[derive(Debug)]
+enum Command {
+    Ls,
+    Cd(Utf8PathBuf),
+}
+
+impl From<Ls> for Command {
+    fn from(_ls: Ls) -> Self {
+        Command::Ls
+    }
+}
+
+impl From<Cd> for Command {
+    fn from(cd: Cd) -> Self {
+        Command::Cd(cd.0)
+    }
 }
 
 fn parse_line(i: &str) -> IResult<&str, Line> {
@@ -60,7 +72,7 @@ fn parse_entry(i: &str) -> IResult<&str, Entry> {
 
 fn parse_command(i: &str) -> IResult<&str, Command> {
     let (i, _) = tag("$ ")(i)?;
-    alt((map(parse_ls, Command::Ls), map(parse_cd, Command::Cd)))(i)
+    alt((map(parse_ls, Into::into), map(parse_cd, Into::into)))(i)
 }
 
 fn parse_path(i: &str) -> IResult<&str, Utf8PathBuf> {
