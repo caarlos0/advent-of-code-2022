@@ -28,6 +28,41 @@ impl fmt::Debug for Node {
     }
 }
 
+impl Node {
+    fn is_dir(&self) -> bool {
+        self.size == 0 && !self.children.is_empty()
+    }
+
+    fn total_size(&self) -> u64 {
+        self.children
+            .values()
+            .map(|child| child.borrow().total_size())
+            .sum::<u64>()
+            + self.size as u64
+    }
+}
+
+fn all_dirs(n: NodeHandle) -> Box<dyn Iterator<Item = NodeHandle>> {
+    // clippy is wrong and should feel bad
+    #[allow(clippy::needless_collect)]
+    let children = n.borrow().children.values().cloned().collect::<Vec<_>>();
+
+    Box::new(
+        std::iter::once(n).chain(
+            children
+                .into_iter()
+                .filter_map(|c| {
+                    if c.borrow().is_dir() {
+                        Some(all_dirs(c))
+                    } else {
+                        None
+                    }
+                })
+                .flatten(),
+        ),
+    )
+}
+
 #[derive(Debug)]
 struct Ls;
 
@@ -109,7 +144,22 @@ fn main() {
     println!("result 2: {}", part2(&buf));
 }
 
-fn part1(input: &String) -> usize {
+fn part1(input: &String) -> u64 {
+    let root = parse(input);
+    return all_dirs(root)
+        .map(|d| d.borrow().total_size())
+        .filter(|&s| s <= 100_000)
+        .inspect(|s| {
+            dbg!(s);
+        })
+        .sum::<u64>();
+}
+
+fn part2(_line: &String) -> usize {
+    unimplemented!()
+}
+
+fn parse(input: &String) -> NodeHandle {
     let lines = input
         .lines()
         .map(|l| all_consuming(parse_line)(l).finish().unwrap().1);
@@ -118,7 +168,6 @@ fn part1(input: &String) -> usize {
     let mut node = root.clone();
 
     for line in lines {
-        println!("{line:?}");
         match line {
             Line::Command(cmd) => match cmd {
                 Command::Ls => {
@@ -151,12 +200,7 @@ fn part1(input: &String) -> usize {
             },
         }
     }
-    println!("{root:#?}");
-    0
-}
-
-fn part2(_line: &String) -> usize {
-    unimplemented!()
+    return root;
 }
 
 #[cfg(test)]
