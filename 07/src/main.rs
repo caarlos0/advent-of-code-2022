@@ -155,8 +155,22 @@ fn part1(input: &String) -> u64 {
         .sum::<u64>();
 }
 
-fn part2(_line: &String) -> usize {
-    unimplemented!()
+fn part2(input: &String) -> u64 {
+    let root = parse(input);
+    let total_space = 70000000_u64;
+    let used_space = root.borrow().total_size();
+    let free_space = total_space.checked_sub(dbg!(used_space)).unwrap();
+    let needed_free_space = 30000000_u64;
+    let minimum_space_to_free = needed_free_space.checked_sub(free_space).unwrap();
+
+    return all_dirs(root)
+        .map(|d| d.borrow().total_size())
+        .filter(|&s| s >= minimum_space_to_free)
+        .inspect(|s| {
+            dbg!(s);
+        })
+        .min()
+        .expect("yes plz");
 }
 
 fn parse(input: &String) -> NodeHandle {
