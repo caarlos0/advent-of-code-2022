@@ -71,10 +71,7 @@ struct Point {
 
 impl Point {
     fn new(x: isize, y: isize) -> Point {
-        Point {
-            x: cmp::max(x, 0),
-            y: cmp::max(y, 0),
-        }
+        Point { x, y }
     }
 
     // pythagoras
@@ -194,8 +191,7 @@ mod test {
     fn input_real() {
         let input = include_str!("../input.txt");
         let res = ex01(input.to_string());
-        assert_eq!(true, res < 6000, "should be higher than 6000: {}", res,);
-        assert_eq!(true, res > 5746, "should be higher than 5746: {}", res,);
+        assert_eq!(6190, res, "should be lower than 6190: {}", res,);
         // assert_eq!(8, ex02(input.to_string()));
     }
 
@@ -395,7 +391,6 @@ mod test {
         print_matrix(max_x, max_y, head, tail, start, touched.clone());
         assert_eq!(2, touched.len());
         assert_eq!(true, touched.contains(&Point::new(4, 0)));
-        assert_eq!(true, touched.contains(&Point::new(5, 0)));
-        assert_eq!(true, false);
+        assert_eq!(true, touched.contains(&Point::new(3, 0)));
     }
 }
