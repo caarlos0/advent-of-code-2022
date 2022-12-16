@@ -2,16 +2,18 @@
 use std::{cmp, collections::HashSet, fs::File, io::Read, str::FromStr};
 
 fn main() {
-    println!("example 01: {}", ex01(file_to_str("./src/input1.txt")));
-    println!("problem 01: {}", ex01(file_to_str("input.txt")));
-    println!("problem 02: {}", ex02(file_to_str("input.txt")));
-}
-
-fn file_to_str(path: &str) -> String {
-    let mut f = File::open(path).unwrap();
-    let mut buf = String::new();
-    f.read_to_string(&mut buf).expect("yep");
-    buf
+    println!(
+        "example 01: {}",
+        ex01(include_str!("input1.txt").to_string())
+    );
+    println!(
+        "problem 01: {}",
+        ex01(include_str!("../input.txt").to_string())
+    );
+    println!(
+        "problem 02: {}",
+        ex02(include_str!("../input.txt").to_string())
+    );
 }
 
 #[derive(Debug)]
@@ -52,10 +54,10 @@ fn parse(input: &String) -> Vec<Movement> {
     return input
         .lines()
         .map(|line| {
-            let (dir, len) = line.split_once(" ").expect("ok");
+            let (dir, count) = line.split_once(" ").expect("ok");
             return Movement {
                 dir: Direction::from_str(dir).expect("ok"),
-                count: len.parse().expect("ok"),
+                count: count.parse().expect("ok"),
             };
         })
         .collect();
@@ -75,8 +77,10 @@ impl Point {
         }
     }
 
+    // pythagoras
+    // f64::sqrt((self.x as f64 - other.x as f64).powi(2) + (self.y as f64 - other.y as f64).powi(2))
+
     fn chebychev_distance_to(&self, other: &Point) -> isize {
-        // f64::sqrt((self.x as f64 - pos.x as f64).powi(2) + (self.y as f64 - pos.y as f64).powi(2))
         cmp::max((self.x - other.x).abs(), (self.y - other.y).abs())
     }
 
@@ -105,7 +109,7 @@ impl Point {
 
 impl ToString for Point {
     fn to_string(&self) -> String {
-        format!("{}x{}", self.x, self.y)
+        format!("{},{}", self.x, self.y)
     }
 }
 
@@ -171,7 +175,7 @@ fn print_matrix(max_x: isize, max_y: isize, head: Point, tail: Point, touched: H
 mod test {
     use crate::*;
 
-    // #[test]
+    #[test]
     fn input_real() {
         let input = include_str!("../input.txt");
         let res = ex01(input.to_string());
