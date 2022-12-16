@@ -141,7 +141,6 @@ fn ex01(input: String) -> usize {
         }
     }
 
-    println!();
     // dbg!(touched.to_owned());
     // dbg!(max_x);
     // dbg!(max_y);
@@ -152,11 +151,14 @@ fn ex01(input: String) -> usize {
 
 fn print_matrix(max_x: isize, max_y: isize, head: Point, tail: Point, touched: HashSet<Point>) {
     println!();
+    println!();
     for y in (0..max_y + 1).rev() {
         println!();
         for x in 0..max_x + 1 {
             let pos = Point::new(x, y);
-            if head == pos {
+            if pos == Point::new(0, 0) {
+                print!("s");
+            } else if head == pos {
                 print!("H");
             } else if tail == pos {
                 print!("T");
@@ -361,5 +363,11 @@ mod test {
             expected,
             result,
         );
+    }
+
+    #[test]
+    fn reddit_comment() {
+        assert_eq!(2, ex01("R 1\nU 2".to_string()));
+        // assert_eq!(true, false) // just to force print the matrix
     }
 }
