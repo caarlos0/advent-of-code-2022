@@ -16,7 +16,7 @@ fn main() {
     );
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum Direction {
     Right,
     Left,
@@ -38,7 +38,7 @@ impl FromStr for Direction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 struct Movement {
     dir: Direction,
     count: usize,
@@ -56,8 +56,8 @@ fn parse(input: &String) -> Vec<Movement> {
         .map(|line| {
             let (dir, count) = line.split_once(" ").expect("ok");
             return Movement {
-                dir: Direction::from_str(dir).expect("ok"),
-                count: count.parse().expect("ok"),
+                dir: Direction::from_str(dir).expect(dir),
+                count: count.parse().expect(count),
             };
         })
         .collect();
@@ -336,6 +336,30 @@ mod test {
             tail,
             "should be in 1,1, is {}",
             tail.to_string()
+        );
+    }
+
+    #[test]
+    fn test_parse() {
+        let input = "U 1024\nD 21\nR 253\nL 12\nR 53\nD 999";
+        let result = parse(&input.to_string());
+        let expected = vec![
+            Movement::new(Direction::Up, 1024),
+            Movement::new(Direction::Down, 21),
+            Movement::new(Direction::Right, 253),
+            Movement::new(Direction::Left, 12),
+            Movement::new(Direction::Right, 53),
+            Movement::new(Direction::Down, 999),
+        ];
+        assert_eq!(
+            true,
+            expected
+                .iter()
+                .zip(result.clone())
+                .all(|(a, b)| a.clone() == b.clone()),
+            "expected {:?}, got {:?}",
+            expected,
+            result,
         );
     }
 }
