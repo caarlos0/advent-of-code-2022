@@ -125,12 +125,12 @@ fn execute(m: &Movement, head: &Point, tail: &Point) -> (Point, Point) {
     (head, tail.clone())
 }
 
-fn process(input: String) -> (HashSet<Point>, isize, isize, Point, Point) {
+fn process(start: Point, input: String) -> (HashSet<Point>, isize, isize, Point, Point) {
     let mut touched: HashSet<Point> = HashSet::new();
-    let mut max_x = 0;
-    let mut max_y = 0;
-    let mut head = Point::new(0, 0);
-    let mut tail = Point::new(0, 0);
+    let mut max_x = start.x;
+    let mut max_y = start.y;
+    let mut head = start.clone();
+    let mut tail = start.clone();
     for m in parse(&input).iter() {
         for _ in 0..m.count {
             (head, tail) = execute(m, &head, &tail);
@@ -144,24 +144,32 @@ fn process(input: String) -> (HashSet<Point>, isize, isize, Point, Point) {
 }
 
 fn ex01(input: String) -> usize {
-    let (touched, max_x, max_y, head, tail) = process(input);
+    let start = Point::new(0, 0);
+    let (touched, max_x, max_y, head, tail) = process(start.clone(), input);
 
     // dbg!(touched.to_owned());
     // dbg!(max_x);
     // dbg!(max_y);
-    print_matrix(max_x, max_y, head, tail, touched.clone());
+    print_matrix(max_x, max_y, head, tail, start, touched.clone());
 
     touched.len()
 }
 
-fn print_matrix(max_x: isize, max_y: isize, head: Point, tail: Point, touched: HashSet<Point>) {
+fn print_matrix(
+    max_x: isize,
+    max_y: isize,
+    head: Point,
+    tail: Point,
+    start: Point,
+    touched: HashSet<Point>,
+) {
     println!();
     println!();
     for y in (0..max_y + 1).rev() {
         println!();
         for x in 0..max_x + 1 {
             let pos = Point::new(x, y);
-            if pos == Point::new(0, 0) {
+            if pos == start {
                 print!("s");
             } else if head == pos {
                 print!("H");
@@ -372,10 +380,22 @@ mod test {
 
     #[test]
     fn reddit_comment() {
-        let (touched, _, _, _, _) = process("R 1\nU 2".to_string());
+        let start = Point::new(0, 0);
+        let (touched, _, _, _, _) = process(start, "R 1\nU 2".to_string());
         assert_eq!(2, touched.len());
         assert_eq!(true, touched.contains(&Point::new(0, 0)));
         assert_eq!(true, touched.contains(&Point::new(1, 1)));
         // assert_eq!(true, false) // just to force print the matrix
+    }
+
+    #[test]
+    fn reddit_comment_2() {
+        let start = Point::new(4, 0);
+        let (touched, max_x, max_y, head, tail) = process(start.clone(), "L 2".to_string());
+        print_matrix(max_x, max_y, head, tail, start, touched.clone());
+        assert_eq!(2, touched.len());
+        assert_eq!(true, touched.contains(&Point::new(4, 0)));
+        assert_eq!(true, touched.contains(&Point::new(5, 0)));
+        assert_eq!(true, false);
     }
 }
