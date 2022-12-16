@@ -125,7 +125,7 @@ fn execute(m: &Movement, head: &Point, tail: &Point) -> (Point, Point) {
     (head, tail.clone())
 }
 
-fn ex01(input: String) -> usize {
+fn process(input: String) -> (HashSet<Point>, isize, isize, Point, Point) {
     let mut touched: HashSet<Point> = HashSet::new();
     let mut max_x = 0;
     let mut max_y = 0;
@@ -140,6 +140,11 @@ fn ex01(input: String) -> usize {
             // println!("h:{} t:{}", head.to_string(), tail.to_string());
         }
     }
+    (touched, max_x, max_y, head, tail)
+}
+
+fn ex01(input: String) -> usize {
+    let (touched, max_x, max_y, head, tail) = process(input);
 
     // dbg!(touched.to_owned());
     // dbg!(max_x);
@@ -367,7 +372,10 @@ mod test {
 
     #[test]
     fn reddit_comment() {
-        assert_eq!(2, ex01("R 1\nU 2".to_string()));
+        let (touched, _, _, _, _) = process("R 1\nU 2".to_string());
+        assert_eq!(2, touched.len());
+        assert_eq!(true, touched.contains(&Point::new(0, 0)));
+        assert_eq!(true, touched.contains(&Point::new(1, 1)));
         // assert_eq!(true, false) // just to force print the matrix
     }
 }
