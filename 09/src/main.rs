@@ -138,15 +138,6 @@ impl ToString for Point {
     }
 }
 
-// deprecated: do not use.
-fn execute(m: &Movement, head: &Point, tail: &Point) -> (Point, Point) {
-    let head = head.neighbour(&m.dir);
-    if !tail.is_close_to(&head) {
-        return (head, Point::new_tail(&head, &tail));
-    }
-    (head, tail.clone())
-}
-
 fn process(
     start: Point,
     rope_len: usize,
@@ -167,7 +158,6 @@ fn process(
                 let tail = rope[i + 1];
                 if !tail.is_close_to(&head) {
                     rope[i + 1] = Point::new_tail(&head, &tail);
-                    if i == rope_len - 2 {}
                 }
             }
             touched.insert(rope[rope_len - 1].clone());
@@ -268,106 +258,6 @@ mod test {
                 p2.to_string()
             );
         });
-    }
-
-    #[test]
-    fn tail_diag_two_steps() {
-        let mut head = Point::new(2, 2);
-        let mut tail = Point::new(1, 1);
-        let m = Movement::new(Direction::Up, 1);
-        (head, tail) = execute(&m, &head, &tail);
-        assert_eq!(
-            Point::new(2, 3),
-            head,
-            "should be in 2,3, is {}",
-            head.to_string()
-        );
-        assert_eq!(
-            Point::new(2, 2),
-            tail,
-            "should be in 2,2, is {}",
-            tail.to_string()
-        );
-    }
-
-    #[test]
-    fn tail_hor_two_steps_rigth() {
-        let mut head = Point::new(2, 1);
-        let mut tail = Point::new(1, 1);
-        let m = Movement::new(Direction::Right, 1);
-        (head, tail) = execute(&m, &head, &tail);
-        assert_eq!(
-            Point::new(3, 1),
-            head,
-            "should be in 3,1, is {}",
-            head.to_string()
-        );
-        assert_eq!(
-            Point::new(2, 1),
-            tail,
-            "should be in 2,1, is {}",
-            tail.to_string()
-        );
-    }
-
-    #[test]
-    fn tail_hor_two_steps_left() {
-        let mut head = Point::new(1, 1);
-        let mut tail = Point::new(2, 1);
-        let m = Movement::new(Direction::Left, 1);
-        (head, tail) = execute(&m, &head, &tail);
-        assert_eq!(
-            Point::new(0, 1),
-            head,
-            "should be in 0,1, is {}",
-            head.to_string()
-        );
-        assert_eq!(
-            Point::new(1, 1),
-            tail,
-            "should be in 1,1, is {}",
-            tail.to_string()
-        );
-    }
-
-    #[test]
-    fn tail_hor_vert_steps_up() {
-        let mut head = Point::new(1, 2);
-        let mut tail = Point::new(1, 1);
-        let m = Movement::new(Direction::Up, 1);
-        (head, tail) = execute(&m, &head, &tail);
-        assert_eq!(
-            Point::new(1, 3),
-            head,
-            "should be in 1,3, is {}",
-            head.to_string()
-        );
-        assert_eq!(
-            Point::new(1, 2),
-            tail,
-            "should be in 1,2, is {}",
-            tail.to_string()
-        );
-    }
-
-    #[test]
-    fn tail_hor_vert_steps_down() {
-        let mut head = Point::new(1, 1);
-        let mut tail = Point::new(1, 2);
-        let m = Movement::new(Direction::Down, 1);
-        (head, tail) = execute(&m, &head, &tail);
-        assert_eq!(
-            Point::new(1, 0),
-            head,
-            "should be in 1,0, is {}",
-            head.to_string()
-        );
-        assert_eq!(
-            Point::new(1, 1),
-            tail,
-            "should be in 1,1, is {}",
-            tail.to_string()
-        );
     }
 
     #[test]
