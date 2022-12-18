@@ -1,5 +1,11 @@
 #![allow(dead_code, unused)]
-use std::{cmp, collections::HashSet, fs::File, io::Read, str::FromStr};
+use std::{
+    cmp,
+    collections::{HashSet, VecDeque},
+    fs::File,
+    io::Read,
+    str::FromStr,
+};
 
 fn main() {
     println!(
@@ -11,9 +17,27 @@ fn main() {
         ex01(include_str!("../input.txt").to_string())
     );
     println!(
+        "example 02: {}",
+        ex02(include_str!("input2.txt").to_string())
+    );
+    println!(
         "problem 02: {}",
         ex02(include_str!("../input.txt").to_string())
     );
+}
+
+fn ex01(input: String) -> usize {
+    let start = Point::new(0, 0);
+    let (touched, max, min, rope) = process(start.clone(), 2, input);
+    // print_matrix(max, min, start, rope, touched.clone());
+    touched.len()
+}
+
+fn ex02(input: String) -> usize {
+    let start = Point::new(0, 0);
+    let (touched, max, min, rope) = process(start.clone(), 10, input);
+    // print_matrix(max, min, start, rope, touched.clone());
+    touched.len()
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -94,12 +118,16 @@ impl Point {
         }
     }
 
-    fn new_tail(head: &Self, dir: &Direction) -> Self {
-        match dir {
-            Direction::Right => Point::new(head.x - 1, head.y),
-            Direction::Left => Point::new(head.x + 1, head.y),
-            Direction::Up => Point::new(head.x, head.y - 1),
-            Direction::Down => Point::new(head.x, head.y + 1),
+    fn new_tail(head: &Self, tail: &Self) -> Self {
+        // match dir {
+        //     Direction::Right => Point::new(head.x - 1, head.y),
+        //     Direction::Left => Point::new(head.x + 1, head.y),
+        //     Direction::Up => Point::new(head.x, head.y - 1),
+        //     Direction::Down => Point::new(head.x, head.y + 1),
+        // }
+        Self {
+            x: tail.x + cmp::max(cmp::min(head.x - tail.x, 1), -1),
+            y: tail.y + cmp::max(cmp::min(head.y - tail.y, 1), -1),
         }
     }
 }
@@ -110,67 +138,56 @@ impl ToString for Point {
     }
 }
 
-fn ex02(input: String) -> usize {
-    0
-}
-
+// deprecated: do not use.
 fn execute(m: &Movement, head: &Point, tail: &Point) -> (Point, Point) {
     let head = head.neighbour(&m.dir);
     if !tail.is_close_to(&head) {
-        return (head, Point::new_tail(&head, &m.dir));
+        return (head, Point::new_tail(&head, &tail));
     }
     (head, tail.clone())
 }
 
-fn process(start: Point, input: String) -> (HashSet<Point>, isize, isize, Point, Point) {
+fn process(
+    start: Point,
+    rope_len: usize,
+    input: String,
+) -> (HashSet<Point>, Point, Point, Vec<Point>) {
     let mut touched: HashSet<Point> = HashSet::new();
-    let mut max_x = start.x;
-    let mut max_y = start.y;
-    let mut head = start.clone();
-    let mut tail = start.clone();
+    let mut max = start.clone();
+    let mut min = start.clone();
+    let mut rope: Vec<Point> = vec![start; rope_len];
+
     for m in parse(&input).iter() {
         for _ in 0..m.count {
-            (head, tail) = execute(m, &head, &tail);
-            touched.insert(tail.clone());
-            max_x = cmp::max(head.x, max_x);
-            max_y = cmp::max(head.y, max_y);
-            // println!("h:{} t:{}", head.to_string(), tail.to_string());
+            rope[0] = rope[0].neighbour(&m.dir);
+            max = Point::new(cmp::max(rope[0].x, max.x), cmp::max(rope[0].y, max.y));
+            min = Point::new(cmp::min(rope[0].x, min.x), cmp::min(rope[0].y, min.y));
+            for i in 0..rope_len - 1 {
+                let head = rope[i];
+                let tail = rope[i + 1];
+                if !tail.is_close_to(&head) {
+                    rope[i + 1] = Point::new_tail(&head, &tail);
+                    if i == rope_len - 2 {}
+                }
+            }
+            touched.insert(rope[rope_len - 1].clone());
         }
     }
-    (touched, max_x, max_y, head, tail)
+    (touched, max, min, rope.into())
 }
 
-fn ex01(input: String) -> usize {
-    let start = Point::new(0, 0);
-    let (touched, max_x, max_y, head, tail) = process(start.clone(), input);
-
-    // dbg!(touched.to_owned());
-    // dbg!(max_x);
-    // dbg!(max_y);
-    print_matrix(max_x, max_y, head, tail, start, touched.clone());
-
-    touched.len()
-}
-
-fn print_matrix(
-    max_x: isize,
-    max_y: isize,
-    head: Point,
-    tail: Point,
-    start: Point,
-    touched: HashSet<Point>,
-) {
+fn print_matrix(max: Point, min: Point, start: Point, rope: Vec<Point>, touched: HashSet<Point>) {
     println!();
     println!();
-    for y in (0..max_y + 1).rev() {
+    for y in (min.y..max.y + 1).rev() {
         println!();
-        for x in 0..max_x + 1 {
+        for x in min.x..max.x + 1 {
             let pos = Point::new(x, y);
             if pos == start {
                 print!("s");
-            } else if head == pos {
+            } else if rope[rope.len() - 1] == pos {
                 print!("H");
-            } else if tail == pos {
+            } else if rope[0] == pos {
                 print!("T");
             } else if touched.contains(&pos) {
                 print!("#");
@@ -190,16 +207,19 @@ mod test {
     #[test]
     fn input_real() {
         let input = include_str!("../input.txt");
-        let res = ex01(input.to_string());
-        assert_eq!(6190, res, "should be lower than 6190: {}", res,);
-        // assert_eq!(8, ex02(input.to_string()));
+        assert_eq!(6190, ex01(input.to_string()));
+        assert_eq!(2516, ex02(input.to_string()));
     }
 
     #[test]
     fn input_sample() {
-        let input = include_str!("input1.txt");
-        assert_eq!(13, ex01(input.to_string()));
-        // assert_eq!(8, ex02(input.to_string()));
+        assert_eq!(13, ex01(include_str!("input1.txt").to_string()));
+    }
+
+    #[test]
+    fn input_sample_02() {
+        assert_eq!(1, ex02(include_str!("input1.txt").to_string()));
+        assert_eq!(36, ex02(include_str!("input2.txt").to_string()));
     }
 
     #[test]
@@ -377,18 +397,18 @@ mod test {
     #[test]
     fn reddit_comment() {
         let start = Point::new(0, 0);
-        let (touched, _, _, _, _) = process(start, "R 1\nU 2".to_string());
+        let (touched, max, min, rope) = process(start, 2, "R 1\nU 2".to_string());
+        print_matrix(max, min, start, rope, touched.clone());
         assert_eq!(2, touched.len());
         assert_eq!(true, touched.contains(&Point::new(0, 0)));
         assert_eq!(true, touched.contains(&Point::new(1, 1)));
-        // assert_eq!(true, false) // just to force print the matrix
     }
 
     #[test]
     fn reddit_comment_2() {
         let start = Point::new(4, 0);
-        let (touched, max_x, max_y, head, tail) = process(start.clone(), "L 2".to_string());
-        print_matrix(max_x, max_y, head, tail, start, touched.clone());
+        let (touched, max, min, rope) = process(start.clone(), 2, "L 2".to_string());
+        print_matrix(max, min, start, rope, touched.clone());
         assert_eq!(2, touched.len());
         assert_eq!(true, touched.contains(&Point::new(4, 0)));
         assert_eq!(true, touched.contains(&Point::new(3, 0)));
