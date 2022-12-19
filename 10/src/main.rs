@@ -1,7 +1,9 @@
 #![allow(dead_code, unused)]
+use core::fmt;
 use std::{
     cmp,
     collections::{HashSet, VecDeque},
+    fmt::Write,
     fs::File,
     io::Read,
     str::FromStr,
@@ -116,21 +118,17 @@ impl CPU {
     }
 
     fn push(&mut self, x: isize) {
-        let page = self.cycles.len() / 40;
-        let i = cmp::max(self.cycles.len() - 40 * page, 1);
+        let mut page = self.cycles.len() / 40;
+        let mut i = self.cycles.len() - 40 * page;
+        // handles last item in previous page
+        if i == 0 {
+            page = page - 1;
+            i = 40;
+        }
+
         let n = isize::try_from(i).unwrap();
         if (self.x()..self.x() + 3).contains(&n) {
             self.screen[page][i - 1] = '#';
-        }
-        if page == 4 {
-            dbg!(
-                i,
-                n,
-                self.x(),
-                (self.x()..self.x() + 3),
-                &self.screen[page].iter().collect::<String>(),
-                (self.x()..self.x() + 3).contains(&n)
-            );
         }
         self.cycles.push(x);
     }
@@ -242,7 +240,8 @@ mod test {
             "######......######......######......####",
             "#######.......#######.......#######.....",
         ]
-        .join("\n");
+        .join("\n")
+            + "\n";
 
         let mut cpu = CPU::new();
         include_str!("input2.txt")
