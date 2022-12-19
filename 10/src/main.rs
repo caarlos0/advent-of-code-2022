@@ -117,21 +117,21 @@ impl CPU {
 
     fn push(&mut self, x: isize) {
         let page = self.cycles.len() / 40;
-        let i = self.cycles.len() - 40 * page;
+        let i = cmp::max(self.cycles.len() - 40 * page, 1);
         let n = isize::try_from(i).unwrap();
-        // print!(
-        //     "Sprite pos from {} to {}, x is {}",
-        //     self.x(),
-        //     self.x() + 2,
-        //     n
-        // );
         if (self.x()..self.x() + 3).contains(&n) {
-            // print!(" - drawn!");
-            if i != 0 {
-                self.screen[page][i - 1] = '#';
-            }
+            self.screen[page][i - 1] = '#';
         }
-        // println!();
+        if page == 4 {
+            dbg!(
+                i,
+                n,
+                self.x(),
+                (self.x()..self.x() + 3),
+                &self.screen[page].iter().collect::<String>(),
+                (self.x()..self.x() + 3).contains(&n)
+            );
+        }
         self.cycles.push(x);
     }
 
@@ -244,8 +244,6 @@ mod test {
         ]
         .join("\n");
 
-        println!("aaaaaaa {}", 57 / 40);
-
         let mut cpu = CPU::new();
         include_str!("input2.txt")
             .lines()
@@ -254,7 +252,7 @@ mod test {
             .for_each(|op| {
                 cpu.apply(op);
             });
-        println!("{}", cpu.draw());
+        println!("expected:\n{}\n\ngot:\n{}\n", expected, cpu.draw());
         assert_eq!(expected, cpu.draw());
     }
 
