@@ -35,7 +35,7 @@ fn ex01(input: String) -> isize {
         .for_each(|op| {
             cpu.apply(op);
         });
-    cpu.calc(vec![20, 60, 100, 140, 180, 220])
+    cpu.calc()
 }
 
 fn ex02(input: String) -> usize {
@@ -117,8 +117,11 @@ impl CPU {
         }
     }
 
-    fn calc(&self, cycles: Vec<usize>) -> isize {
-        cycles.iter().map(|&i| self.signal_at(i)).sum()
+    fn calc(&self) -> isize {
+        vec![20, 60, 100, 140, 180, 220]
+            .iter()
+            .map(|&i| self.signal_at(i))
+            .sum()
     }
 }
 
@@ -185,6 +188,6 @@ mod test {
         assert_eq!(2880, cpu.signal_at(180));
         assert_eq!(3960, cpu.signal_at(220));
 
-        assert_eq!(13140, cpu.calc(vec![20, 60, 100, 140, 180, 220]));
+        assert_eq!(13140, cpu.calc());
     }
 }
