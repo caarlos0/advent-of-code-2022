@@ -85,7 +85,6 @@ impl FromStr for Op {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.split_once(" ") {
             Some((op, count)) => match op {
-                "noop" => Ok(Op::noop()),
                 "addx" => Ok(Op::addx(count.parse().unwrap())),
                 _ => unreachable!(),
             },
